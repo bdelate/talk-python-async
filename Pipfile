@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+mwparserfromhell = "==0.5.2"
+requests = "==2.20.1"
+
+[dev-packages]
+mypy = "==0.641"
+black = "==18.9b0"
+
+[requires]
+python_version = "3.7"

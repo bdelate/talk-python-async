@@ -1,6 +1,9 @@
 # stdlib imports
 import json
 import time
+from threading import Thread
+import queue
+
 
 # 3rd party imports
 import mwparserfromhell as parser
@@ -10,39 +13,42 @@ import requests
 import utils
 
 
-def get_api_data(series: str) -> str:
+def get_api_data(series: str, q: queue.Queue) -> None:
     url = f"https://en.wikipedia.org/w/api.php?format=json&action=parse&prop=wikitext&page={series}"
     response = requests.get(url)
-    return response.text
+    q.put((series, response.text))
 
 
-def do_io() -> dict:
-    api_data = {}
+def do_io(q: queue.Queue) -> None:
+    threads = []
     print("\nCalling API for:\n")
     for series in utils.TV_SERIES:
         print(series)
-        api_data[series] = get_api_data(series=series)
-    return api_data
+        threads.append(Thread(target=get_api_data, args=(series, q), daemon=True))
+    [t.start() for t in threads]
+    [t.join() for t in threads]
 
 
-def do_cpu(api_data: dict) -> None:
+def do_cpu(q: queue.Queue) -> None:
     print("\nDoing cpu bound stuff for:\n")
-    for series, data in api_data.items():
-        num_seasons = utils.process_response(series=series, response=data)
+    while not q.empty():
+        item = q.get()
+        num_seasons = utils.process_response(series=item[0], response=item[1])
         print(num_seasons)
 
 
 def main() -> None:
+    q = queue.Queue()
     io_start = time.time()
-    api_data = do_io()
+    do_io(q=q)
     print(f"\nDone. IO bound time: {round(time.time() - io_start, 2)}")
 
     cpu_start = time.time()
-    do_cpu(api_data=api_data)
+    do_cpu(q=q)
     print(f"\nDone. CPU bound time: {round(time.time() - cpu_start, 2)}")
 
 
 if __name__ == "__main__":
     start_time = time.time()
     main()
-    print(f"\nDone. Total time: {round(time.time() - start_time, 2)}")
+    print(f"\nTotal time: {round(time.time() - start_time, 2)}")

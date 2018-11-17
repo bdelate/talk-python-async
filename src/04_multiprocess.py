@@ -1,5 +1,7 @@
 # stdlib imports
 import json
+import math
+import multiprocessing
 import time
 
 # 3rd party imports
@@ -16,6 +18,14 @@ def get_api_data(series: str) -> str:
     return response.text
 
 
+def process_task(data: dict) -> list:
+    results = []
+    for series, response in data.items():
+        num_seasons = utils.process_response(series=series, response=response)
+        results.append(num_seasons)
+    return results
+
+
 def do_io() -> dict:
     api_data = {}
     print("\nCalling API for:\n")
@@ -27,9 +37,20 @@ def do_io() -> dict:
 
 def do_cpu(api_data: dict) -> None:
     print("\nDoing cpu bound stuff for:\n")
-    for series, data in api_data.items():
-        num_seasons = utils.process_response(series=series, response=data)
-        print(num_seasons)
+    pool = multiprocessing.Pool()
+    processor_count = multiprocessing.cpu_count()
+    group_size = math.ceil((len(utils.TV_SERIES) / processor_count))
+    tasks = []
+    for n in range(0, len(utils.TV_SERIES), group_size):
+        series_list = utils.TV_SERIES[n : n + group_size]
+        data = {series: api_data[series] for series in series_list}
+        task = pool.apply_async(process_task, (data,))
+        tasks.append(task)
+
+    pool.close()
+    pool.join()
+    for t in tasks:
+        print(*t.get(), sep="\n")
 
 
 def main() -> None:

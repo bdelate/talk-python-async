@@ -1,0 +1,67 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww21000\viewh12580\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 - The GIL\
+	- A lock that ensures only one thread can execute at a time\
+	- Can be a potential performance bottleneck for cpu bound operations\
+	- Applicable to CPython. Not Jython, IronPython.\
+	- the GIL is released:\
+		- IO\
+		- every 0.005 seconds. Can be changed using sys.setswitchinterval()\
+	- why does it exists:\
+		- Python uses reference counting for garbage collection\
+		- When no references point to an object, the memory is released\
+		- Without the GIL, multiple threads might inc/dec the reference count of an object simultaneously either causing deadlocks or releasing an objects 		   memory while it is still needed.\
+\
+\
+- CPU vs io bound\
+	- cpu: image processing, math\
+	- io: networks, database, file, user input\
+\
+\
+- sync, async, Concurrent vs parallel\
+	-sync\
+		- doing things one after the other. Each operation blocks\
+	- async\
+		- non blocking\
+		- concurrent:\
+			- time slicing\
+			- good for io (waiting operations)\
+		- parallel\
+			- operations run at the same time\
+			- good for cpu and io\
+\
+- threads\
+	- threads live inside processes and share the same memory space\
+	- need locks when accessing shared memory\
+	- threads cannot execute code simultaneously, ie: the get things done concurrently\
+	- Can be hard to reason about\
+\
+- processes\
+	- costly to spawn. more overhead than threads\
+	- sharing information between processes is done by pickling\
+	- processes can execute code simultaneously\
+\
+- asyncio\
+	- revolves around an event loop, coroutines and tasks\
+		- the event loop pauses tasks that are waiting on io and switches to those that are ready\
+		- coroutines are like generators in that they yield control back to the caller and retain their state\
+		- tasks are a wrapper around coroutines and are used to schedule functions (coroutines) to run concurrently in the event loop\
+	- process:\
+		- we have an event loop\
+		- we create tasks from our coroutines which are passed to the event loop to be run\
+		- when the currently active task makes a blocking call, we can await the result which creates a future and gives control back to the event loop to continue with the next task\
+		- When the blocking call resolves, the event loop is able to continue where it left off for that specific task (hence why it behaves like a generator)\
+\
+CPU Bound => Multi Processing\
+I/O Bound, Fast I/O, Limited Number of Connections => Multi Threading\
+I/O Bound, Slow I/O, Many connections => Asyncio\
+		\
+\
+\
+\
+- packages: uvloop etc}

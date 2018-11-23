@@ -1,23 +1,32 @@
-####################
-# This illustrates that asyncio does not increase performance
-# for cpu bound operations. Asyncio is aimed at io bound operations.
-####################
-
 # stdlib imports
+import asyncio
+import concurrent.futures
 import json
 import math
+import multiprocessing
 
 # 3rd party imports
 import mwparserfromhell as parser
 
 
 async def process_response(api_data: dict) -> None:
-    for series, data in api_data.items():
-        num_seasons = await parse_response(series=series, response=data)
+    processor_count = multiprocessing.cpu_count()
+    loop = asyncio.get_running_loop()
+    tasks = [
+        loop.run_in_executor(
+            concurrent.futures.ProcessPoolExecutor(max_workers=processor_count),
+            parse_response,
+            series,
+            data,
+        )
+        for series, data in api_data.items()
+    ]
+    for task in asyncio.as_completed(tasks, loop=loop):
+        num_seasons = await task
         print(num_seasons)
 
 
-async def parse_response(series: str, response: str) -> str:
+def parse_response(series: str, response: str) -> str:
     json_data = json.loads(response)
     try:
         wiki_text = json_data["parse"]["wikitext"]["*"]
@@ -26,12 +35,12 @@ async def parse_response(series: str, response: str) -> str:
     else:
         wiki_code = parser.parse(wiki_text)
         templates = wiki_code.filter_templates()
-        num_seasons = await get_num_seasons(series=series, templates=templates)
+        num_seasons = get_num_seasons(series=series, templates=templates)
     return num_seasons
 
 
-async def get_num_seasons(series: str, templates: list) -> str:
-    await use_cpu()
+def get_num_seasons(series: str, templates: list) -> str:
+    use_cpu()
     for template in templates:
         if template.has("num_seasons"):
             num_seasons = str(template.get("num_seasons").value)
@@ -40,7 +49,7 @@ async def get_num_seasons(series: str, templates: list) -> str:
     return f"- {series} > unknown"
 
 
-async def use_cpu():
+def use_cpu():
     """perform arbitrary calculations to use cpu"""
     pos = 25_000_000
     k_sq = 1000 * 1000

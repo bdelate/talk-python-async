@@ -28,7 +28,7 @@ def get_data() -> dict:
     tasks = []
     for n in range(0, len(config.TV_SERIES), group_size):
         series_list = config.TV_SERIES[n : n + group_size]
-        process_num = int(n / 3 + 1)
+        process_num = int((n / (processor_count - 1)) + 1)
         task = pool.apply_async(api, (series_list, process_num))
         tasks.append(task)
 

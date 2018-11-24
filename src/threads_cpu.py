@@ -19,7 +19,7 @@ print_lock = Lock()
 def process_response(q: queue.Queue) -> None:
     threads = []
     print("\nDoing cpu bound stuff for:\n")
-    for i in range(q.qsize()):
+    while not q.empty():
         item = q.get()
         threads.append(
             Thread(target=parse_response, args=(item[0], item[1]), daemon=True)

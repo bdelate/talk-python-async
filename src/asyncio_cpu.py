@@ -21,12 +21,10 @@ async def process_response(api_data: dict) -> None:
         )
         for series, data in api_data.items()
     ]
-    for task in asyncio.as_completed(tasks, loop=loop):
-        num_seasons = await task
-        print(num_seasons)
+    await asyncio.gather(*tasks, loop=loop)
 
 
-def parse_response(series: str, response: str) -> str:
+def parse_response(series: str, response: str) -> None:
     json_data = json.loads(response)
     try:
         wiki_text = json_data["parse"]["wikitext"]["*"]
@@ -36,7 +34,7 @@ def parse_response(series: str, response: str) -> str:
         wiki_code = parser.parse(wiki_text)
         templates = wiki_code.filter_templates()
         num_seasons = get_num_seasons(series=series, templates=templates)
-    return num_seasons
+    print(num_seasons)
 
 
 def get_num_seasons(series: str, templates: list) -> str:

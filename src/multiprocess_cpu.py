@@ -19,7 +19,7 @@ def process_response(api_data: dict) -> None:
     for n in range(0, len(config.TV_SERIES), group_size):
         series_list = config.TV_SERIES[n : n + group_size]
         data = {series: api_data[series] for series in series_list}
-        process_num = int(n / 3 + 1)
+        process_num = int((n / (processor_count - 1)) + 1)
         task = pool.apply_async(process_task, (data, process_num))
         tasks.append(task)
 

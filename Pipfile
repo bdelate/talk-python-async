@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 mwparserfromhell = "==0.5.2"
 requests = "==2.20.1"
-aiohttp = "==3.4.4"
+aiohttp = "==3.7.4"
 
 [dev-packages]
 mypy = "==0.641"
